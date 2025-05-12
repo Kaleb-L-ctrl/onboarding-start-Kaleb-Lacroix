@@ -5,11 +5,12 @@
 
 `default_nettype none
 
-module SPI_perriferal (
+module SPI_peripheral (
     input wire SCLK,
     input wire nCS,
     input wire COPI,
     input wire clk,
+    input wire rst_n,
 
     output reg [7:0] en_reg_out_7_0,
     output reg [7:0] en_reg_out_15_8,

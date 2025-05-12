@@ -18,12 +18,12 @@ module tt_um_uwasic_onboarding_kaleb_lacroix (
     assign uio_oe = 8'hff;
 
     wire en_reg_out_7_0 [7:0];
-    wire en_reg_out_15_8[7:0]
-    wire en_reg_pwm_7_0[7:0]
-    wire en_reg_pwm_15_8[7:0]
-    wire pwm_duty_cycle[7:0]
+    wire en_reg_out_15_8[7:0];
+    wire en_reg_pwm_7_0[7:0];
+    wire en_reg_pwm_15_8[7:0];
+    wire pwm_duty_cycle[7:0];
 
-SPI_perriferal SPI_perriferal_inst(
+SPI_peripheral SPI_peripheral_inst(
       .SCLK(ui_in[0]),
       .nCS(ui_in[2]),
       .COPI(ui_in[1]),
@@ -43,7 +43,7 @@ SPI_perriferal SPI_perriferal_inst(
 
 
   // Add uio_in and ui_in[7:3] to the list of unused signals:
-  wire _unused = &{ena, ui_in[7:3], uio_in, 1'b0};
+ 
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
   assign uio_out = 0;
@@ -51,5 +51,6 @@ SPI_perriferal SPI_perriferal_inst(
 
   // List all unused inputs to prevent warnings
   wire _unused = &{ena, clk, rst_n, 1'b0};
+  wire _unused = &{ena, ui_in[7:3], uio_in, 1'b0};
 
 endmodule
