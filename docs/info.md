@@ -9,7 +9,7 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-this is sample text and doest actually describe the projects just want to poas sthe docs test bench, somehting about tapout and clock cycles
+this is sample text and doest actually describe the projects just want to pass the docs test bench, somehting about tapout and clock cycles
 
 ## How to test
 
