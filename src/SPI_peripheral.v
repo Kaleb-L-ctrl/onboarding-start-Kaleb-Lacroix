@@ -20,7 +20,7 @@ module SPI_peripheral (
 );
 
 
-    reg SCLKRISE;
+    wire SCLKRISE;
     reg prev_sclk;
     reg nCSrise;
     reg [1:0] SCLK_sync;
@@ -32,28 +32,34 @@ module SPI_peripheral (
     reg[7:0] Mdata; //message data
     reg [15:0] copi_message;
     
+
+    assign SCLKRISE = !prev_sclk   &   SCLK_sync[0];
     always @(posedge clk) begin//on internal clock we sample through our buffers
         SCLK_buffer <= SCLK; //avoids metastability with initital FF since we'll use SCLK_sync[0] for SCLKRISE so just one more layer here
         SCLK_sync <= {SCLK_sync[0], SCLK_buffer};
         prev_sclk <= SCLK_sync[1];
         copi_sync <= {copi_sync[0], COPI};
         ncs_sync <= {ncs_sync[0], nCS};
-        SCLKRISE <= (prev_sclk == 0)&&(SCLK_sync[0] == 1);
+        //SCLKRISE <= (prev_sclk == 0)&&(SCLK_sync[0] == 1); relic  from when SCLK rise was a reg
         //nCSfall <= (ncs_sync[0] == 1) &&(ncs_sync[1] == 0);
         nCSrise <= (ncs_sync[0] == 0) &&(ncs_sync[1] == 1);
     
+        if (rst_n)begin
+            SCLK_sync <= 2'b00
+            copi_sync <= 2'b00
+            ncs_sync <= 2'b00
+            prev_sclk <= 0;
+        end 
 
-
-    
         if(SCLKRISE) begin//data valid take a sample and do the thing
             if (!ncs_sync[1]) begin
                 copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
-                counter += 1;
+                counter <= counter + 1;
 
                 if (counter == 15) begin
                     counter <= 0;
                     if (copi_message[15] == 1'b1) begin///we ignore read
-                        Madd<= copi_message[14:7];
+                        Madd<= copi_message[14:8];
                         Mdata <= copi_message[7:0];
                         
                     end
