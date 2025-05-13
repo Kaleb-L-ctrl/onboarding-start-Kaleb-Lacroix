@@ -17,11 +17,11 @@ module tt_um_uwasic_onboarding_kaleb_lacroix (
 );
     assign uio_oe = 8'hff;
 
-    wire en_reg_out_7_0 [7:0];
-    wire en_reg_out_15_8[7:0];
-    wire en_reg_pwm_7_0[7:0];
-    wire en_reg_pwm_15_8[7:0];
-    wire pwm_duty_cycle[7:0];
+    wire [7:0]en_reg_out_7_0 ;
+    wire [7:0]en_reg_out_15_8;
+    wire [7:0]en_reg_pwm_7_0;
+    wire [7:0]en_reg_pwm_15_8;
+    wire [7:0]pwm_duty_cycle;
 
 SPI_peripheral SPI_peripheral_inst(
       .SCLK(ui_in[0]),
