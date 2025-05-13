@@ -45,9 +45,9 @@ module SPI_peripheral (
         nCSrise <= (ncs_sync[0] == 0) &&(ncs_sync[1] == 1);
     
         if (rst_n)begin
-            SCLK_sync <= 2'b00
-            copi_sync <= 2'b00
-            ncs_sync <= 2'b00
+            SCLK_sync <= 2'b00;
+            copi_sync <= 2'b00;
+            ncs_sync <= 2'b00;
             prev_sclk <= 0;
         end 
 
