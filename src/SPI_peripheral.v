@@ -21,28 +21,29 @@ module SPI_peripheral (
 
 
     wire SCLKRISE;
+    wire nCSrise;
     reg prev_sclk;
-    reg nCSrise;
+    
     reg [1:0] SCLK_sync;
     reg [1:0] ncs_sync;
     reg [1:0] copi_sync;
-    reg SCLK_buffer;
+   
     reg [4:0] counter;
     reg [7:0] Madd; //message destination adress
-    reg[7:0] Mdata; //message data
+    reg[7:0] Mdata; //message data 
     reg [15:0] copi_message;
     
 
     assign SCLKRISE = !prev_sclk   &   SCLK_sync[0];
+    assign nCSrise =  !ncs_sync[0] &   ncs_sync[1];
+
     always @(posedge clk) begin//on internal clock we sample through our buffers
-        SCLK_buffer <= SCLK; //avoids metastability with initital FF since we'll use SCLK_sync[0] for SCLKRISE so just one more layer here
-        SCLK_sync <= {SCLK_sync[0], SCLK_buffer};
+       
+        SCLK_sync <= {SCLK_sync[0], SCLK};
         prev_sclk <= SCLK_sync[1];
         copi_sync <= {copi_sync[0], COPI};
-        ncs_sync <= {ncs_sync[0], nCS};
-        //SCLKRISE <= (prev_sclk == 0)&&(SCLK_sync[0] == 1); relic  from when SCLK rise was a reg
-        //nCSfall <= (ncs_sync[0] == 1) &&(ncs_sync[1] == 0);
-        nCSrise <= (ncs_sync[0] == 0) &&(ncs_sync[1] == 1);
+        ncs_sync  <= {ncs_sync[0], nCS};
+        
     
         if (rst_n)begin
             SCLK_sync <= 2'b00;
@@ -59,7 +60,7 @@ module SPI_peripheral (
                 if (counter == 15) begin
                     counter <= 0;
                     if (copi_message[15] == 1'b1) begin///we ignore read
-                        Madd<= copi_message[14:8];
+                        Madd  <= copi_message[14:8];
                         Mdata <= copi_message[7:0];
                         
                     end
@@ -67,7 +68,7 @@ module SPI_peripheral (
             end
            
         end
-         if (nCSrise)begin
+         if (nCSrise) && (copi_message[15])begin//data valid and its a write command
                 case (Madd)//log all of the data to the registers when nCS is rising edge
                     7'h00:en_reg_out_7_0  <= Mdata;
                     7'h01:en_reg_out_15_8 <= Mdata;
