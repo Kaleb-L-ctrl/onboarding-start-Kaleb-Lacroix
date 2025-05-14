@@ -34,24 +34,28 @@ module SPI_peripheral (
     reg [15:0] copi_message;
     
 
-    assign SCLKRISE = !prev_sclk   &   SCLK_sync[0];
-    assign nCSrise =  !ncs_sync[0] &   ncs_sync[1];
+    assign SCLKRISE = (SCLK_sync == 2'b01);
+    assign nCSrise =  (ncs_sync == 2'b01);
 
     always @(posedge clk) begin//on internal clock we sample through our buffers
         if (!rst_n)begin //reset (active low)
-            SCLK_sync <= 2'b00;
-            copi_sync <= 2'b00;
-            ncs_sync  <= 2'b00;
-            prev_sclk <= 0;
+            SCLK_sync       <= 2'b00;
+            copi_sync       <= 2'b00;
+            ncs_sync        <= 2'b00;
+            prev_sclk       <= 0;
 
             en_reg_out_7_0  <= 8'b0;
             en_reg_out_15_8 <= 8'b0;
             en_reg_pwm_7_0  <= 8'b0;
             en_reg_pwm_15_8 <= 8'b0;
             pwm_duty_cycle  <= 8'b0;
-        end
-        
-        if (rst_n)begin//not reset; we capture values from contrtoler
+
+            counter         <= 0;
+            copi_message    <= 16'b0;
+            Madd            <= 8'b0;
+            Mdata           <= 8'b0;
+
+        end else begin//not reset; we capture values from contrtoler
             SCLK_sync <= {SCLK_sync[0], SCLK};
             prev_sclk <= SCLK_sync[1];
             copi_sync <= {copi_sync[0], COPI};
@@ -65,7 +69,7 @@ module SPI_peripheral (
                 copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
                 counter <= counter + 1;
 
-                if (counter == 15) begin
+                if (counter == 16) begin
                     counter <= 0;
                     if (copi_message[15] == 1'b1) begin///we ignore read
                         Madd  <= copi_message[14:8];
