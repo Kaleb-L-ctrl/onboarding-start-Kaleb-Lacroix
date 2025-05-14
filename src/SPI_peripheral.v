@@ -38,7 +38,7 @@ module SPI_peripheral (
     assign nCSrise =  !ncs_sync[0] &   ncs_sync[1];
 
     always @(posedge clk) begin//on internal clock we sample through our buffers
-        else if (!rst_n)begin //reset (active low)
+        if (!rst_n)begin //reset (active low)
             SCLK_sync <= 2'b00;
             copi_sync <= 2'b00;
             ncs_sync  <= 2'b00;
