@@ -75,21 +75,20 @@ module SPI_peripheral (
                         Madd  <= copi_message[14:8];
                         Mdata <= copi_message[7:0];
                         
+                        case (Madd)//log all of the data to the registers when nCS is rising edge
+                            7'h00:en_reg_out_7_0  <= Mdata;
+                            7'h01:en_reg_out_15_8 <= Mdata;
+                            7'h02:en_reg_pwm_7_0  <= Mdata;
+                            7'h03:en_reg_pwm_15_8 <= Mdata;
+                            7'h04:pwm_duty_cycle  <= Mdata;
+                            default:;//do nothing we are ignoring invalid adresses
+                        endcase
                     end
                 end
             end
            
         end
-         if ((nCSrise) && (copi_message[15]))begin//data valid and its a write command
-                case (Madd)//log all of the data to the registers when nCS is rising edge
-                    7'h00:en_reg_out_7_0  <= 2'hF0;
-                    7'h01:en_reg_out_15_8 <= Mdata;
-                    7'h02:en_reg_pwm_7_0  <= Mdata;
-                    7'h03:en_reg_pwm_15_8 <= Mdata;
-                    7'h04:pwm_duty_cycle  <= Mdata;
-                    default:;//do nothing we are ignoring invalid adresses
-                endcase
-            end
+     
         end
     end
    
