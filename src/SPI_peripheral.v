@@ -77,7 +77,7 @@ module SPI_peripheral (
                         Mdata <= copi_message[7:0];
                         
                         case (Madd)//log all of the data to the registers when nCS is rising edge
-                            7'h00:en_reg_out_7_0  <= Mdata;
+                            7'h00:en_reg_out_7_0  <= 8'hFF;
                             7'h01:en_reg_out_15_8 <= Mdata;
                             7'h02:en_reg_pwm_7_0  <= Mdata;
                             7'h03:en_reg_pwm_15_8 <= Mdata;
