@@ -38,14 +38,7 @@ module SPI_peripheral (
     assign nCSrise =  !ncs_sync[0] &   ncs_sync[1];
 
     always @(posedge clk) begin//on internal clock we sample through our buffers
-        if (rst_n)begin//not reset; we capture values from contrtoler
-            SCLK_sync <= {SCLK_sync[0], SCLK};
-            prev_sclk <= SCLK_sync[1];
-            copi_sync <= {copi_sync[0], COPI};
-            ncs_sync  <= {ncs_sync[0], nCS};
-        end
-    
-        else begin //reset (active low)
+        else if (!rst_n)begin //reset (active low)
             SCLK_sync <= 2'b00;
             copi_sync <= 2'b00;
             ncs_sync  <= 2'b00;
@@ -57,6 +50,15 @@ module SPI_peripheral (
             en_reg_pwm_15_8 <= 8'b0;
             pwm_duty_cycle  <= 8'b0;
         end
+        
+        if (rst_n)begin//not reset; we capture values from contrtoler
+            SCLK_sync <= {SCLK_sync[0], SCLK};
+            prev_sclk <= SCLK_sync[1];
+            copi_sync <= {copi_sync[0], COPI};
+            ncs_sync  <= {ncs_sync[0], nCS};
+        
+    
+        
         
         if(SCLKRISE) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
             if (!ncs_sync[1]) begin
@@ -84,6 +86,7 @@ module SPI_peripheral (
                     default:;//do nothing we are ignoring invalid adresses
                 endcase
             end
+        end
     end
    
 
