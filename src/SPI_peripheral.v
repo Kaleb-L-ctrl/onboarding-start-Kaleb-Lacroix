@@ -29,7 +29,7 @@ module SPI_peripheral (
     reg [1:0] copi_sync;
    
     reg [4:0] counter;
-    reg [7:0] Madd; //message destination adress
+    reg [6:0] Madd; //message destination adress
     reg[7:0] Mdata; //message data 
     reg [15:0] copi_message;
     
@@ -45,7 +45,7 @@ module SPI_peripheral (
         ncs_sync  <= {ncs_sync[0], nCS};
         
     
-        if (rst_n)begin
+        if (!rst_n)begin 
             SCLK_sync <= 2'b00;
             copi_sync <= 2'b00;
             ncs_sync <= 2'b00;
@@ -68,7 +68,7 @@ module SPI_peripheral (
             end
            
         end
-         if (nCSrise) && (copi_message[15])begin//data valid and its a write command
+         if ((nCSrise) && (copi_message[15]))begin//data valid and its a write command
                 case (Madd)//log all of the data to the registers when nCS is rising edge
                     7'h00:en_reg_out_7_0  <= Mdata;
                     7'h01:en_reg_out_15_8 <= Mdata;
