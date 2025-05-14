@@ -51,7 +51,7 @@ module tt_um_uwasic_onboarding_kaleb_lacroix (
     .en_reg_pwm_7_0(en_reg_pwm_7_0),
     .en_reg_pwm_15_8(en_reg_pwm_15_8),
     .pwm_duty_cycle(pwm_duty_cycle),
-    .out({uio_out, uo_out})
+    .out(out)
   );
 
 
