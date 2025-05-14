@@ -9,7 +9,8 @@ module tb ();
   // Dump the signals to a VCD file. You can view it with gtkwave or surfer.
   initial begin
     $dumpfile("tb.vcd");
-    $dumpvars(0, tb);
+    //$dumpvars(0, tb);
+    $dumpvars(0, SPI_peripheral);
     #1;
   end
 
