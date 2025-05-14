@@ -18,6 +18,11 @@ module SPI_peripheral (
     output reg [7:0] en_reg_pwm_15_8,
     output reg [7:0] pwm_duty_cycle
 );
+  initial begin
+    $dumpfile("spi_perif_DUMP.vcd");
+    $dumpvars(0, SPI_peripheral);
+    #1;
+  end
 
 
     wire SCLKRISE;
