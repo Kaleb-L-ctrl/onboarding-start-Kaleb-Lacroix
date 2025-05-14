@@ -39,7 +39,7 @@ module SPI_peripheral (
     assign SCLKRISE = (SCLK_sync == 2'b01);
     assign nCSrise =  (ncs_sync == 2'b01);
 
-    always @(posedge clk) begin//on internal clock we sample through our buffers
+    always @(posedge clk or negedge rst_n) begin//on internal clock we sample through our buffers
         if (!rst_n)begin //reset (active low)
             SCLK_sync       <= 2'b00;
             copi_sync       <= 2'b00;
@@ -68,11 +68,11 @@ module SPI_peripheral (
         
         
         if(SCLKRISE) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
-            if (!ncs_sync[1]) begin
+            if (!ncs_sync == 2'b00) begin
                 copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
                 counter <= counter + 1;
 
-                if (counter == 15) begin
+                if (counter == 16) begin
                     counter <= 0;
                     message_ready <= 1'b1;
                 end
@@ -81,7 +81,7 @@ module SPI_peripheral (
         end
         if (message_ready) begin///we ignore read
             message_ready <=0;
-            if (copi_message[15])begin
+            if (copi_message[15]== 1'b1)begin
                 Madd  <= copi_message[14:8];
                 Mdata <= copi_message[7:0];
                 
