@@ -5,7 +5,7 @@
 
 `default_nettype none
 
-module tt_um_uwasic_onboarding_kaleb_lacroix(
+module SPI_peripheral(
 
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
