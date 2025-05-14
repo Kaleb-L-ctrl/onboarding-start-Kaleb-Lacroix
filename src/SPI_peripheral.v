@@ -38,21 +38,27 @@ module SPI_peripheral (
     assign nCSrise =  !ncs_sync[0] &   ncs_sync[1];
 
     always @(posedge clk) begin//on internal clock we sample through our buffers
-       
-        SCLK_sync <= {SCLK_sync[0], SCLK};
-        prev_sclk <= SCLK_sync[1];
-        copi_sync <= {copi_sync[0], COPI};
-        ncs_sync  <= {ncs_sync[0], nCS};
-        
+        if (rst_n)begin//not reset; we capture values from contrtoler
+            SCLK_sync <= {SCLK_sync[0], SCLK};
+            prev_sclk <= SCLK_sync[1];
+            copi_sync <= {copi_sync[0], COPI};
+            ncs_sync  <= {ncs_sync[0], nCS};
+        end
     
-        if (!rst_n)begin 
+        else begin //reset (active low)
             SCLK_sync <= 2'b00;
             copi_sync <= 2'b00;
-            ncs_sync <= 2'b00;
+            ncs_sync  <= 2'b00;
             prev_sclk <= 0;
-        end 
 
-        if(SCLKRISE) begin//data valid take a sample and do the thing
+            en_reg_out_7_0  <= 8'b0;
+            en_reg_out_15_8 <= 8'b0;
+            en_reg_pwm_7_0  <= 8'b0;
+            en_reg_pwm_15_8 <= 8'b0;
+            pwm_duty_cycle  <= 8'b0;
+        end
+        
+        if(SCLKRISE) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
             if (!ncs_sync[1]) begin
                 copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
                 counter <= counter + 1;

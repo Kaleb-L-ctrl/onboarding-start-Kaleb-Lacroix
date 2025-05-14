@@ -30,6 +30,19 @@ module tt_um_uwasic_onboarding_kaleb_lacroix (
 
 
 
+  SPI_peripheral SPI_peripheral_inst(
+        .SCLK(ui_in[0]),
+        .nCS(ui_in[2]),
+        .COPI(ui_in[1]),
+        .rst_n(rst_n),
+        
+        .en_reg_out_7_0(en_reg_out_7_0),
+        .en_reg_out_15_8(en_reg_out_15_8),
+        .en_reg_pwm_7_0(en_reg_pwm_7_0),
+        .en_reg_pwm_15_8(en_reg_pwm_15_8),
+        .pwm_duty_cycle(pwm_duty_cycle),
+        .clk(clk)
+  );
   pwm_peripheral pwm_peripheral_inst (
     .clk(clk),
     .rst_n(rst_n),
@@ -48,19 +61,7 @@ module tt_um_uwasic_onboarding_kaleb_lacroix (
  
 
   // List all unused inputs to prevent warnings
+
   wire _unused = &{ena, ui_in[7:3], uio_in, 1'b0};
 
-  SPI_peripheral SPI_peripheral_inst(
-        .SCLK(ui_in[0]),
-        .nCS(ui_in[2]),
-        .COPI(ui_in[1]),
-        .rst_n(rst_n),
-        
-        .en_reg_out_7_0(en_reg_out_7_0),
-        .en_reg_out_15_8(en_reg_out_15_8),
-        .en_reg_pwm_7_0(en_reg_pwm_7_0),
-        .en_reg_pwm_15_8(en_reg_pwm_15_8),
-        .pwm_duty_cycle(pwm_duty_cycle),
-        .clk(clk)
-  );
 endmodule
