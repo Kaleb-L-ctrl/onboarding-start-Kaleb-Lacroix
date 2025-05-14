@@ -29,6 +29,7 @@ module SPI_peripheral (
     reg [1:0] ncs_sync;
     reg [1:0] copi_sync;
    
+   reg message_ready;
     reg [4:0] counter;
     reg [6:0] Madd; //message destination adress
     reg[7:0] Mdata; //message data 
@@ -55,6 +56,7 @@ module SPI_peripheral (
             copi_message    <= 16'b0;
             Madd            <= 8'b0;
             Mdata           <= 8'b0;
+            message_ready   <=0;
 
         end else begin//not reset; we capture values from contrtoler
             SCLK_sync <= {SCLK_sync[0], SCLK};
@@ -70,28 +72,32 @@ module SPI_peripheral (
                 copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
                 counter <= counter + 1;
 
-                if (counter == 16) begin
+                if (counter == 15) begin
                     counter <= 0;
-                    if (copi_message[15] == 1'b1) begin///we ignore read
-                        Madd  <= copi_message[14:8];
-                        Mdata <= copi_message[7:0];
-                        
-                        case (Madd)//log all of the data to the registers when nCS is rising edge
-                            7'h00:en_reg_out_7_0  <= 8'hFF;
-                            7'h01:en_reg_out_15_8 <= Mdata;
-                            7'h02:en_reg_pwm_7_0  <= Mdata;
-                            7'h03:en_reg_pwm_15_8 <= Mdata;
-                            7'h04:pwm_duty_cycle  <= Mdata;
-                            default: ;//do nothing we are ignoring invalid adresses
-                        endcase
-                    end
+                    message_ready <= 1'b1;
                 end
             end
            
         end
-     
+        if (message_ready) begin///we ignore read
+            message_ready <=0;
+            if (copi_message[15])begin
+                Madd  <= copi_message[14:8];
+                Mdata <= copi_message[7:0];
+                
+                case (Madd)//log all of the data to the registers when nCS is rising edge
+                    7'h00:en_reg_out_7_0  <= Mdata;
+                    7'h01:en_reg_out_15_8 <= Mdata;
+                    7'h02:en_reg_pwm_7_0  <= Mdata;
+                    7'h03:en_reg_pwm_15_8 <= Mdata;
+                    7'h04:pwm_duty_cycle  <= Mdata;
+                    default: ;//do nothing we are ignoring invalid adresses
+                endcase
+            end
         end
+     
     end
+end
    
 
 
