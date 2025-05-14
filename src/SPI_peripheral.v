@@ -82,7 +82,7 @@ module SPI_peripheral (
                             7'h02:en_reg_pwm_7_0  <= Mdata;
                             7'h03:en_reg_pwm_15_8 <= Mdata;
                             7'h04:pwm_duty_cycle  <= Mdata;
-                            default:;//do nothing we are ignoring invalid adresses
+                            default: ;//do nothing we are ignoring invalid adresses
                         endcase
                     end
                 end
