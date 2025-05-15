@@ -21,7 +21,7 @@ module SPI_peripheral (
 
 
 
-    //wire SCLKRISE;
+    wire SCLKRISE;
    
 
     
@@ -34,7 +34,7 @@ module SPI_peripheral (
     reg [15:0] copi_message;
     
 
-    //assign SCLKRISE = (SCLK_sync == 2'b01);
+    assign SCLKRISE = (SCLK_sync == 2'b01);
    
 
     always @(posedge clk or negedge rst_n) begin//on internal clock we sample through our buffers
@@ -67,20 +67,24 @@ module SPI_peripheral (
                 copi_message <= 16'b0;
             end
             
-            else if(SCLK_sync == 2'b01 && ncs_sync == 2'b00) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
+            else if(SCLKRISE && ncs_sync == 2'b00) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
                 if (counter != 5'b10000)begin
                     //copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
-                    copi_message[15 - counter] <= copi_sync[1];// matt chen implement
+                    copi_message[15 - counter] <= copi_sync[1];
                     counter <= counter + 1;
+                end
+                else begin
+                    message_ready <= 1'b1;
+                    counter <=1'b0;
                 end
             end
         
 
 
 
-            if (counter==5'b10000) begin///we ignore read
+            if (message_ready) begin//16 bits loaded
             
-                if (copi_message[15]== 1'b1)begin
+                if (copi_message[15]== 1'b1)begin///we ignore read
                     
                     case (copi_message[14:8])//log all of the data to the registers when nCS is rising edge
                         7'h00:en_reg_out_7_0  <= copi_message[7:0];
