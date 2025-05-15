@@ -27,7 +27,7 @@ module SPI_peripheral (
     reg [4:0] counter;
     reg [15:0] copi_message;
 
-    wire SCLKRISE = (SCLK_sync == 2'b01)
+    wire SCLKRISE = (SCLK_sync == 2'b01);
     
     always @(posedge clk or negedge rst_n) begin//on internal clock we sample through our buffers
         if (!rst_n)begin //reset (active low)
