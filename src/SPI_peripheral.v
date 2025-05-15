@@ -22,8 +22,8 @@ module SPI_peripheral (
 
 
     wire SCLKRISE;
-    wire nCSrise;
-    reg prev_sclk;
+   
+
     
     reg [1:0] SCLK_sync;
     reg [1:0] ncs_sync;
@@ -35,14 +35,14 @@ module SPI_peripheral (
     
 
     assign SCLKRISE = (SCLK_sync == 2'b01);
-    assign nCSrise =  (ncs_sync == 2'b01);
+   
 
     always @(posedge clk or negedge rst_n) begin//on internal clock we sample through our buffers
         if (!rst_n)begin //reset (active low)
             SCLK_sync       <= 2'b00;
             copi_sync       <= 2'b00;
             ncs_sync        <= 2'b00;
-            prev_sclk       <= 0;
+          
 
             en_reg_out_7_0  <= 8'b0;
             en_reg_out_15_8 <= 8'b0;
@@ -57,13 +57,13 @@ module SPI_peripheral (
 
         end else begin//not reset; we capture values from contrtoler
             SCLK_sync <= {SCLK_sync[0], SCLK};
-            prev_sclk <= SCLK_sync[1];
             copi_sync <= {copi_sync[0], COPI};
             ncs_sync  <= {ncs_sync[0], nCS};
 
         
             if (ncs_sync == 2'b10)begin
                 counter <= 5'b0;
+                message_ready <= 1'b0;
                 copi_message <= 16'b0;
             end
             
