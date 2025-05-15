@@ -21,7 +21,7 @@ module tt_um_uwasic_onboarding_kaleb_lacroix (
     assign uo_out  = out[7:0]; 
     assign uio_out = out[15:8];
    
-   assign uio_oe = 0'hFF;
+   assign uio_oe = 8'hFF;
 
     wire [7:0]en_reg_out_7_0 ;
     wire [7:0]en_reg_out_15_8;
