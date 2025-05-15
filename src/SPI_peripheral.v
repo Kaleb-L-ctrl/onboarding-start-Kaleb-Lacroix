@@ -1,73 +1,71 @@
-/*
- * Copyright (c) 2024 Your Name
- * SPDX-License-Identifier: Apache-2.0
- */
+module SPI_peripheral #(
+    parameter SYNC_FLOPS = 2
+)
+(
+    input wire       SCLK,// clock
+    input wire       COPI,//in from controller
+    input wire       nCS,//start transaction on negedge
+    input wire       clk,//
+    input wire       rst_n,// 
 
-`default_nettype none
-
-module SPI_peripheral(
-
-    input  wire [7:0] ui_in,    // Dedicated inputs
-    output wire [7:0] uo_out,   // Dedicated outputs
-    input  wire [7:0] uio_in,   // IOs: Input path
-    output wire [7:0] uio_out,  // IOs: Output path
-    output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
-    input  wire       ena,      // always 1 when the design is powered, so you can ignore it
-    input  wire       clk,      // clock
-    input  wire       rst_n    // reset_n - low to reset
-    //input  wire [1:0] test_mode // debugger. unsupported by make. moved to ui_in[4:3]
+    output reg [7:0] en_reg_out_7_0,
+    output reg [7:0] en_reg_out_15_8, 
+    output reg [7:0] en_reg_pwm_7_0,
+    output reg [7:0] en_reg_pwm_15_8,
+    output reg [7:0] pwm_duty_cycle
 );
 
-// always@(*) begin
-//   case(addr_out)
-//     7'd0: uo_out <= en_reg_out_7_0;
-//     7'd1: uo_out <= en_reg_out_15_8;
-//     7'd2: uo_out <= en_reg_pwm_7_0;
-//     7'd3: uo_out <= en_reg_pwm_15_8;
-//     7'd4: uo_out <= pwm_duty_cycle;
-//     default: uo_out <= 8'b0;
-//   endcase
-// end
+reg [4:0] curr_bit; 
+reg [15:0] transaction_data;
 
-  wire [15:0] out;
-  
-  assign uo_out  = out[7:0];
-  assign uio_out = out[15:8];
-  assign uio_oe  = 0;
+reg [SYNC_FLOPS-1:0] SCLK_sync;
+reg [SYNC_FLOPS-1:0] COPI_sync;
+reg [SYNC_FLOPS-1:0] nCS_sync;
 
-    // Create wires to connect to the values of the registers
-  wire [7:0] en_reg_out_7_0;
-  wire [7:0] en_reg_out_15_8;
-  wire [7:0] en_reg_pwm_7_0;
-  wire [7:0] en_reg_pwm_15_8;
-  wire [7:0] pwm_duty_cycle;
+always @(posedge clk or negedge rst_n) begin
 
-  pwm_peripheral pwm_peripheral_inst (
-      .clk(clk),
-      .rst_n(rst_n),
-      .en_reg_out_7_0(en_reg_out_7_0),
-      .en_reg_out_15_8(en_reg_out_15_8),
-      .en_reg_pwm_7_0(en_reg_pwm_7_0),
-      .en_reg_pwm_15_8(en_reg_pwm_15_8),
-      .pwm_duty_cycle(pwm_duty_cycle),
-      //.out()
-      .out(out) //[15:8] to uio, [7:0] to uo
-    );
-    // Add uio_in and ui_in[7:5] to the list of unused signals:
-    wire _unused = &{ena, ui_in[7:3], uio_oe, uio_in, 1'b0};
+    if (!rst_n) begin //reset state
+        curr_bit <= 5'b0;
+        transaction_data <= 16'b0;
 
-   spi_peripheral spi_peripheral_inst (
-      .SCLK(ui_in[0]),
-      .COPI(ui_in[1]),
-      .nCS(ui_in[2]),
-      .clk(clk),
-      .rst_n(rst_n),
+        SCLK_sync <= 0;
+        COPI_sync <= 0;
+        nCS_sync <= 0;
 
-      .en_reg_out_7_0(en_reg_out_7_0),
-      .en_reg_out_15_8(en_reg_out_15_8),
-      .en_reg_pwm_7_0(en_reg_pwm_7_0),
-      .en_reg_pwm_15_8(en_reg_pwm_15_8),
-      .pwm_duty_cycle(pwm_duty_cycle)
-    );
+        en_reg_out_7_0 <= 8'b0;
+        en_reg_out_15_8 <= 8'b0;
+        en_reg_pwm_7_0 <= 8'b0;
+        en_reg_pwm_15_8 <= 8'b0;
+        pwm_duty_cycle <= 8'b0;
+    end else begin
+        //capture on clock cycle
+        SCLK_sync <= {SCLK_sync[SYNC_FLOPS-2:0], SCLK};
+        COPI_sync <= {COPI_sync[SYNC_FLOPS-2:0], COPI};  // Use COPI_sync
+        nCS_sync <= {nCS_sync[SYNC_FLOPS-2:0], nCS};     // Use nCS_sync
+        
+        if(nCS_sync == 2'b10) begin //negedge. begin data capture
+            curr_bit <= 5'b0;
+            transaction_data <= 16'b0;
+        end
+
+        else if (nCS_sync == 2'b00 && SCLK_sync == 2'b01) begin //posedge detect SCLK when data is valid
+            if (curr_bit!=5'b10000) begin
+                    transaction_data[15 - curr_bit] <= COPI_sync[SYNC_FLOPS-1];
+                    curr_bit <= curr_bit + 1;
+                end
+        end
+        if(curr_bit[4] == 1'b1 && transaction_data[15] == 1'b1) begin
+            case (transaction_data[14:8]) 
+                7'b0000000: en_reg_out_7_0 <= transaction_data[7:0];
+                7'b0000001: en_reg_out_15_8 <= transaction_data[7:0];
+                7'b0000010: en_reg_pwm_7_0 <= transaction_data[7:0];
+                7'b0000011: en_reg_pwm_15_8 <= transaction_data[7:0];
+                7'b0000100: pwm_duty_cycle <= transaction_data[7:0];
+                default: ;
+            endcase
+        end
+    end
+end
+
 
 endmodule
