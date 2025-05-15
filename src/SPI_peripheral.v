@@ -26,6 +26,8 @@ module SPI_peripheral (
     reg message_ready;
     reg [4:0] counter;
     reg [15:0] copi_message;
+
+    wire SCLKRISE = (SCLK_sync == 2'b01)
     
     always @(posedge clk or negedge rst_n) begin//on internal clock we sample through our buffers
         if (!rst_n)begin //reset (active low)
@@ -46,28 +48,24 @@ module SPI_peripheral (
             message_ready   <=0;
 
         end else begin//not reset; we capture values from contrtoler
-            SCLK_sync <= {SCLK_sync[0], SCLK};
+            SCLK_sync <= {SCLK_sync[0], SCLK};//zomg synchronizer
             copi_sync <= {copi_sync[0], COPI};
             ncs_sync  <= {ncs_sync[0], nCS};
 
         
-            if (ncs_sync == 2'b10)begin
+            if (ncs_sync == 2'b10)begin//falling edge we about to recieve a message get ready
                 counter <= 5'b0;
                 message_ready <= 1'b0;
                 copi_message <= 16'b0;
             end
             
-            else if(SCLK_sync == 2'b01 && ncs_sync == 2'b00) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
+            else if(SCLKRISE && ncs_sync == 2'b00) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
                 if (counter != 5'b10000)begin
                     copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
-                    //copi_message[15 - counter] <= copi_sync[1];
                     counter <= counter + 1;
                 end
             end
         
-
-
-
             if (counter==16) begin///we ignore read
                 if (copi_message[15]== 1'b1)begin
                     
