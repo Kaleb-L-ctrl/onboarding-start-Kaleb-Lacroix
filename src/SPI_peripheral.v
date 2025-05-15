@@ -64,43 +64,43 @@ module SPI_peripheral (
             copi_sync <= {copi_sync[0], COPI};
             ncs_sync  <= {ncs_sync[0], nCS};
 
-    
-        if (ncs_sync == 2'b10)begin
-            counter <= 5'b0;
-            copi_message <= 16'b0;
-        end
         
-        else if(SCLKRISE && ncs_sync == 2'b00) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
-            if (counter != 16)begin
-                copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
-                counter <= counter + 1;
+            if (ncs_sync == 2'b10)begin
+                counter <= 5'b0;
+                copi_message <= 16'b0;
             end
-            else if (counter == 16) begin
-                counter <= 0;
-                message_ready <= 1'b1;
+            
+            else if(SCLKRISE && ncs_sync == 2'b00) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
+                if (counter != 5'b10000)begin
+                    copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
+                    counter <= counter + 1;
+                end
+                else if (counter == 5'b10000) begin
+                    counter <= 0;
+                    message_ready <= 1'b1;
+                end
             end
+        
+
+
+
+            if (message_ready==1'b1) begin///we ignore read
+                message_ready <=0;
+                if (copi_message[15]== 1'b1)begin
+                    Madd  <= copi_message[14:8];
+                    Mdata <= copi_message[7:0];
+                    
+                    case (Madd)//log all of the data to the registers when nCS is rising edge
+                        7'h00:en_reg_out_7_0  <= Mdata;
+                        7'h01:en_reg_out_15_8 <= Mdata;
+                        7'h02:en_reg_pwm_7_0  <= Mdata;
+                        7'h03:en_reg_pwm_15_8 <= Mdata;
+                        7'h04:pwm_duty_cycle  <= Mdata;
+                        default: ;//do nothing we are ignoring invalid adresses
+                    endcase
+                end
             end
         end
-
-
-
-        if (message_ready==1'b1) begin///we ignore read
-            message_ready <=0;
-            if (copi_message[15]== 1'b1)begin
-                Madd  <= copi_message[14:8];
-                Mdata <= copi_message[7:0];
-                
-                case (Madd)//log all of the data to the registers when nCS is rising edge
-                    7'h00:en_reg_out_7_0  <= Mdata;
-                    7'h01:en_reg_out_15_8 <= Mdata;
-                    7'h02:en_reg_pwm_7_0  <= Mdata;
-                    7'h03:en_reg_pwm_15_8 <= Mdata;
-                    7'h04:pwm_duty_cycle  <= Mdata;
-                    default: ;//do nothing we are ignoring invalid adresses
-                endcase
-            end
-        end
-     
     end
 
    
