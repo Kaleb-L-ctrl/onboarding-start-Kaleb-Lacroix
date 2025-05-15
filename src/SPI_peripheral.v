@@ -29,7 +29,7 @@ module SPI_peripheral (
     reg [1:0] ncs_sync;
     reg [1:0] copi_sync;
    
-   reg message_ready;
+    reg message_ready;
     reg [4:0] counter;
     reg [15:0] copi_message;
     
@@ -69,7 +69,8 @@ module SPI_peripheral (
             
             else if(SCLK_sync == 2'b01 && ncs_sync == 2'b00) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
                 if (counter != 5'b10000)begin
-                    copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
+                    //copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
+                    copi_message[15 - counter] <= copi_sync[1];// matt chen implement
                     counter <= counter + 1;
                 end
                 else if (counter == 5'b10000) begin
