@@ -52,8 +52,7 @@ module SPI_peripheral (
 
             counter         <= 0;
             copi_message    <= 16'b0;
-            Madd            <= 8'b0;
-            Mdata           <= 8'b0;
+          
             message_ready   <=0;
 
         end else begin//not reset; we capture values from contrtoler
