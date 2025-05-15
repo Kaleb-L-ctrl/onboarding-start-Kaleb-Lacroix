@@ -73,17 +73,13 @@ module SPI_peripheral (
                     copi_message[15 - counter] <= copi_sync[1];// matt chen implement
                     counter <= counter + 1;
                 end
-                else if (counter == 5'b10000) begin
-                    counter <= 0;
-                    message_ready <= 1'b1;
-                end
             end
         
 
 
 
-            if (message_ready==1'b1) begin///we ignore read
-                message_ready <= 1'b0;
+            if (counter==5'b10000) begin///we ignore read
+            
                 if (copi_message[15]== 1'b1)begin
                     
                     case (copi_message[14:8])//log all of the data to the registers when nCS is rising edge
