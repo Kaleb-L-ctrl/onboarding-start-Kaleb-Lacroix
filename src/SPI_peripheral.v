@@ -19,12 +19,6 @@ module SPI_peripheral (
     output reg [7:0] pwm_duty_cycle
 );
 
-
-
-    //wire SCLKRISE;
-   
-
-    
     reg [1:0] SCLK_sync;
     reg [1:0] ncs_sync;
     reg [1:0] copi_sync;
@@ -33,10 +27,6 @@ module SPI_peripheral (
     reg [4:0] counter;
     reg [15:0] copi_message;
     
-
-    //assign SCLKRISE = (SCLK_sync == 2'b01);
-   
-
     always @(posedge clk or negedge rst_n) begin//on internal clock we sample through our buffers
         if (!rst_n)begin //reset (active low)
             SCLK_sync       <= 2'b00;
@@ -69,8 +59,8 @@ module SPI_peripheral (
             
             else if(SCLK_sync == 2'b01 && ncs_sync == 2'b00) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
                 if (counter != 5'b10000)begin
-                    //copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
-                    copi_message[15 - counter] <= copi_sync[1];
+                    copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
+                    //copi_message[15 - counter] <= copi_sync[1];
                     counter <= counter + 1;
                 end
             end
@@ -79,7 +69,6 @@ module SPI_peripheral (
 
 
             if (counter==16) begin///we ignore read
-            
                 if (copi_message[15]== 1'b1)begin
                     
                     case (copi_message[14:8])//log all of the data to the registers when nCS is rising edge
