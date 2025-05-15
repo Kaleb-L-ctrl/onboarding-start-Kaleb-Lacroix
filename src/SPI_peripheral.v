@@ -29,7 +29,7 @@ module SPI_peripheral (
 
     wire SCLKRISE       = (SCLK_sync == 2'b01);
     wire NCSLOW         = (ncs_sync == 2'b00);
-    wire NCS_falling    = (ncs_sync == 2b'10);
+    wire NCS_falling    = (ncs_sync == 2'b10);
 
     always @(posedge clk or negedge rst_n) begin//on internal clock we sample through our buffers
         if (!rst_n)begin //reset (active low)
