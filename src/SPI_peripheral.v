@@ -63,22 +63,27 @@ module SPI_peripheral (
             prev_sclk <= SCLK_sync[1];
             copi_sync <= {copi_sync[0], COPI};
             ncs_sync  <= {ncs_sync[0], nCS};
-        
+
     
+        if (ncs_sync == 2'b10)begin
+            counter <= 5'b0;
+            copi_message <= 16'b0;
+        end
         
-        
-        if(SCLKRISE) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
-            if (!ncs_sync == 2'b00) begin
+        else if(SCLKRISE && ncs_sync == 2'b00) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
+            if (counter != 16)begin
                 copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
                 counter <= counter + 1;
-
-                if (counter == 16) begin
-                    counter <= 0;
-                    message_ready <= 1'b1;
-                end
             end
-           
+            else if (counter == 16) begin
+                counter <= 0;
+                message_ready <= 1'b1;
+            end
+            end
         end
+
+
+
         if (message_ready==1'b1) begin///we ignore read
             message_ready <=0;
             if (copi_message[15]== 1'b1)begin
