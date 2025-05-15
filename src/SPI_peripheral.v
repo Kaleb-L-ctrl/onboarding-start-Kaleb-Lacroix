@@ -31,8 +31,6 @@ module SPI_peripheral (
    
    reg message_ready;
     reg [4:0] counter;
-    reg [6:0] Madd; //message destination adress
-    reg[7:0] Mdata; //message data 
     reg [15:0] copi_message;
     
 
@@ -85,17 +83,15 @@ module SPI_peripheral (
 
 
             if (message_ready==1'b1) begin///we ignore read
-                message_ready <=0;
+                message_ready <= 1'b0;
                 if (copi_message[15]== 1'b1)begin
-                    Madd  <= copi_message[14:8];
-                    Mdata <= copi_message[7:0];
                     
-                    case (Madd)//log all of the data to the registers when nCS is rising edge
-                        7'h00:en_reg_out_7_0  <= Mdata;
-                        7'h01:en_reg_out_15_8 <= Mdata;
-                        7'h02:en_reg_pwm_7_0  <= Mdata;
-                        7'h03:en_reg_pwm_15_8 <= Mdata;
-                        7'h04:pwm_duty_cycle  <= Mdata;
+                    case (copi_message[14:8])//log all of the data to the registers when nCS is rising edge
+                        7'h00:en_reg_out_7_0  <= copi_message[7:0];
+                        7'h01:en_reg_out_15_8 <= copi_message[7:0];
+                        7'h02:en_reg_pwm_7_0  <= copi_message[7:0];
+                        7'h03:en_reg_pwm_15_8 <= copi_message[7:0];
+                        7'h04:pwm_duty_cycle  <= copi_message[7:0];
                         default: ;//do nothing we are ignoring invalid adresses
                     endcase
                 end
