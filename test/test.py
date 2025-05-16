@@ -169,7 +169,7 @@ async def test_pwm_freq(dut):
         Edge_case = 1
 
 
-    if not edge_case:                                           # find the frequency and test
+    if not Edge_case:                                           # find the frequency and test
         await RisingEdge(dut.uo_out)
         first_rise = get_sim_time(units='ns')
         await RisingEdge(dut.uo_out)
