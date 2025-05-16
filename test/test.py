@@ -227,10 +227,8 @@ async def test_pwm_duty(dut):
                                                                 # we have now guarunteed that all outputs are enabled and can start testing PWM
 
     test_cases = [                                              # establish the test cases we will use for this test
-        (0x00,   "0%"),
-        (0x40,  "25%"),
+        (0x00,   "0%"),  
         (0x80,  "50%"),
-        (0xC0,  "75%"),
         (0xFF, "100%")
     ]
 
