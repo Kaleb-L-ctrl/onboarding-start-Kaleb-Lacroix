@@ -186,18 +186,7 @@ async def test_pwm_freq(dut):
 
 async def dutyCycle(dut):       # helper function PWM duty test Kaleb Lacroix
 
-    # Reset
-    dut._log.info("entering duty cycle and reseting")
-    dut.ena.value = 1
-    ncs = 1
-    bit = 0
-    sclk = 0
-    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 5)
-    dut.rst_n.value = 1
-    await ClockCycles(dut.clk, 5)
-    dut._log.info("reset complete moving on to await with timeout")
+
     try:                        # see if theres a rising edge over the timeframe of 3 clock cycles, if not then clearly we are constant low or high (333333 ns is 1 cycle of 3000Hz)
         await with_timeout(RisingEdge(dut.uo_out), timeout_time=333333*3*1000)#x1000 because timout takes ps not ns
         Edge_case = 0
@@ -226,7 +215,18 @@ async def dutyCycle(dut):       # helper function PWM duty test Kaleb Lacroix
 @cocotb.test()
 async def test_pwm_duty(dut):
     #kaleb lacroix code begins:
-
+    # Reset
+    dut._log.info("entering duty cycle and reseting")
+    dut.ena.value = 1
+    ncs = 1
+    bit = 0
+    sclk = 0
+    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 5)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 5)
+    dut._log.info("reset complete moving on to await with timeout")
                                                                 #enable all outputs to prime for testing:
     ui_in_val = await send_spi_transaction(dut, 1, 0x00, 0xFF)  # Write transaction
     await ClockCycles(dut.clk, 1000) 
