@@ -227,29 +227,20 @@ async def test_pwm_duty(dut):
     await ClockCycles(dut.clk, 1000) 
     # we have now guarunteed that all outputs are enabled and can start testing PWM
 
-    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0x00)  # Write transaction
-    await ClockCycles(dut.clk, 100)#give time for SPI to fully update
-    dut_cyc = await dutyCycle(dut.uo_out[0])
-    assert (abs(dut_cyc - 0x00) <= 1 ) , f"expected edge case duty Cycle = 0% (0x00), got {dut_cyc}"
-    await ClockCycles(dut.clk, 100)
+    test_cases = [#establish the test cases we will use for this test
+        (0x00,   "0%"),
+        (0x40,  "25%"),
+        (0x80,  "50%"),
+        (0xC0,  "75%"),
+        (0xFF, "100%")
+    ]
 
-    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0xFF)  # Write transaction
-    await ClockCycles(dut.clk, 100)#give time for SPI to fully update
-    dut_cyc = await dutyCycle(dut.uo_out[0])
-    assert (abs(dut_cyc - 0xFF) <= 1 ) , f"expected edge case duty Cycle = 100% (0xFF), got {dut_cyc}"
-    await ClockCycles(dut.clk, 100)
-
-    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0x80)  # Write transaction
-    await ClockCycles(dut.clk, 100)#give time for SPI to fully update
-    dut_cyc = await dutyCycle(dut.uo_out[0])
-    assert (abs(dut_cyc - 0x80) <= 1 ) , f"expected duty Cycle = 50% (0x80), got {dut_cyc}"
-    await ClockCycles(dut.clk, 100)
-
-    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0xC0)  # Write transaction
-    await ClockCycles(dut.clk, 100)#give time for SPI to fully update
-    dut_cyc = await dutyCycle(dut.uo_out[0])
-    assert (abs(dut_cyc - 0xC0) <= 1 ), f"expected edge case duty Cycle = 75% (0xC0), got {dut_cyc}"
-    await ClockCycles(dut.clk, 100)
+    for Pulse_Width, percent in test_cases:
+        ui_in_val = await send_spi_transaction(dut, 1, 0x04, Pulse_Width)  # Write transaction
+        await ClockCycles(dut.clk, 100)#    give time for SPI to fully update
+        dut_cyc = await dutyCycle(dut.uo_out[0])#check the output, making it 
+        assert (abs(dut_cyc - Pulse_Width) <= 1 ) , f"expected duty Cycle = {percent} (0x{Pulse_Width:02X}), got 0x{dut_cyc:02X}" 
+        await ClockCycles(dut.clk, 100)#    give time for SPI to fully update
 
     
     # Kaleb Lacroix code ends.
