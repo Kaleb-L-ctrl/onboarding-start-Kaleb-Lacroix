@@ -216,19 +216,23 @@ async def dutyCycle(dut):       # helper function PWM duty test Kaleb Lacroix
 async def test_pwm_duty(dut):
     #kaleb lacroix code begins:
     # Reset
-    dut._log.info("entering duty cycle")
+    dut._log.info("Start PWM duty test")
 
-    """                                                       #enable all outputs to prime for testing:
-    ui_in_val = await send_spi_transaction(dut, 1, 0x00, 0xFF)  # Write transaction
-    await ClockCycles(dut.clk, 1000) 
-    ui_in_val = await send_spi_transaction(dut, 1, 0x01, 0xFF)  # Write transaction
-    await ClockCycles(dut.clk, 1000) 
-    ui_in_val = await send_spi_transaction(dut, 1, 0x02, 0xFF)  # Write transaction
-    await ClockCycles(dut.clk, 1000) 
-    ui_in_val = await send_spi_transaction(dut, 1, 0x03, 0xFF)  # Write transaction
-    await ClockCycles(dut.clk, 1000) 
-                                                                # we have now guarunteed that all outputs are enabled and can start testing PWM
-    """
+    # Set the clock period to 100 ns (10 MHz)
+    clock = Clock(dut.clk, 100, units="ns")
+    cocotb.start_soon(clock.start())
+
+    # Reset
+    dut._log.info("Reset")
+    dut.ena.value = 1
+    ncs = 1
+    bit = 0
+    sclk = 0
+    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 5)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 5)
     
     test_cases = [                                              # establish the test cases we will use for this test
         (0x00,   "0%"),  
