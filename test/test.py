@@ -163,16 +163,16 @@ async def test_pwm_freq(dut):
 
                                                                 # first check edge cases (duty cycle = 0% || 100%):
     try:                    # see if theres a rising edge over the timeframe of 3 clock cycles, if not then clearly we are constant low or high (333333 ns is 1 cycle of 3000Hz)
-        await with_timeout(RisingEdge(dut.uo_out[0]), timeout_time=333333*3*1000)#x1000 because timout takes ps not ns
+        await with_timeout(RisingEdge(dut.uo_out), timeout_time=333333*3*1000)#x1000 because timout takes ps not ns
         Edge_case = 0
     except cocotb.result.SimTimeoutError:
         Edge_case = 1
 
 
     if not edge_case:                                           # find the frequency and test
-        await RisingEdge(dut.uo_out[0])
+        await RisingEdge(dut.uo_out)
         first_rise = get_sim_time(units='ns')
-        await RisingEdge(dut.uo_out[0])
+        await RisingEdge(dut.uo_out)
         second_rise = get_sim_time(units = "ns")
 
         period = second_rise - first_rise
@@ -187,17 +187,17 @@ async def test_pwm_freq(dut):
 async def dutyCycle(dut):       # helper function PWM duty test Kaleb Lacroix
 
     try:                        # see if theres a rising edge over the timeframe of 3 clock cycles, if not then clearly we are constant low or high (333333 ns is 1 cycle of 3000Hz)
-        await with_timeout(RisingEdge(dut.uo_out[0]), timeout_time=333333*3*1000)#x1000 because timout takes ps not ns
+        await with_timeout(RisingEdge(dut.uo_out), timeout_time=333333*3*1000)#x1000 because timout takes ps not ns
         Edge_case = 0
     except cocotb.result.SimTimeoutError:
         Edge_case = 1
         
     if not Edge_case:
-        await RisingEdge(dut.uo_out[0])
+        await RisingEdge(dut.uo_out)
         T_rise = get_sim_time(units = "ns")
-        await FallingEdge(dut.uo_out[0])
+        await FallingEdge(dut.uo_out)
         T_fall = get_sim_time(units = "ns")
-        await RisingEdge(dut.uo_out[0])
+        await RisingEdge(dut.uo_out)
         T_rise_2 = get_sim_time(units = "ns")
 
         T_period = T_rise_2 - T_rise
@@ -206,7 +206,7 @@ async def dutyCycle(dut):       # helper function PWM duty test Kaleb Lacroix
         return int(DC)
 
     elif Edge_case:
-        if (dut.uo_out[0].value == 1):
+        if (dut.uo_out.value == 1):
             return (0xFF)           # for 100% duty cycle
         else:
             return (0x00)           # for 0% duty cycle
@@ -235,7 +235,7 @@ async def test_pwm_duty(dut):
     for Pulse_Width, percent in test_cases:
         ui_in_val = await send_spi_transaction(dut, 1, 0x04, Pulse_Width)   # Write transaction
         await ClockCycles(dut.clk, 100)                                     # give time for SPI to fully update
-        dut_cyc = await dutyCycle(dut.uo_out[0])                            # check the output, making it 
+        dut_cyc = await dutyCycle(dut.uo_out)                            # check the output, making it 
         assert (abs(dut_cyc - Pulse_Width) <= 1 ) , f"expected duty Cycle = {percent} (0x{Pulse_Width:02X}), got 0x{dut_cyc:02X}" 
         await ClockCycles(dut.clk, 100)                                     # give time for SPI to fully update
 
