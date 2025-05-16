@@ -200,7 +200,7 @@ async def dutyCycle(dut):       # helper function PWM duty test Kaleb Lacroix
 
 
     try:                        # see if theres a rising edge over the timeframe of 3 clock cycles, if not then clearly we are constant low or high (100 ns is 1 cycle of 1MHz)
-        await with_timeout(RisingEdge(dut.uo_out), timeout_time=100*10*1000)#x1000 because timout takes ps not ns
+        await with_timeout(RisingEdge(dut.uo_out), timeout_time=100*1000*1000)#x1000 because timout takes ps not ns
         Edge_case = 0
         dut._log.info("edge_case 0")
     except cocotb.result.SimTimeoutError:
