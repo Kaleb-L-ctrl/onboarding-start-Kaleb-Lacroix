@@ -187,7 +187,7 @@ async def test_pwm_freq(dut):
 async def dutyCycle(dut):       # helper function PWM duty test Kaleb Lacroix
 
     # Reset
-    dut._log.info("Reset")
+    dut._log.info("entering duty cycle and reseting")
     dut.ena.value = 1
     ncs = 1
     bit = 0
@@ -197,13 +197,13 @@ async def dutyCycle(dut):       # helper function PWM duty test Kaleb Lacroix
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
-
+    dut._log.info("reset complete moving on to await with timeout")
     try:                        # see if theres a rising edge over the timeframe of 3 clock cycles, if not then clearly we are constant low or high (333333 ns is 1 cycle of 3000Hz)
         await with_timeout(RisingEdge(dut.uo_out), timeout_time=333333*3*1000)#x1000 because timout takes ps not ns
         Edge_case = 0
     except cocotb.result.SimTimeoutError:
         Edge_case = 1
-        
+    
     if not Edge_case:
         await RisingEdge(dut.uo_out)
         T_rise = get_sim_time(units = "ns")
