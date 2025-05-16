@@ -183,12 +183,24 @@ async def test_pwm_freq(dut):
     # Kaleb Lacroix code ends.
     dut._log.info("PWM Frequency test completed successfully")
 
+async def prime_registers(dut):
+    registers = [
+        0x00,  
+        0x01,
+        0x02,
+        0x03
+    ]
+    for reg in registers:
+        dut._log.info(f"Write transaction, address {reg:02X}, data 0xFF")
+        ui_in_val = await send_spi_transaction(dut, 1, reg, 0xFF)  # Write transaction
+        assert dut.uo_out.value == 0xF0, f"Expected 0xF0, got {dut.uo_out.value}"
+        await ClockCycles(dut.clk, 1000) 
 
 async def dutyCycle(dut):       # helper function PWM duty test Kaleb Lacroix
 
 
-    try:                        # see if theres a rising edge over the timeframe of 3 clock cycles, if not then clearly we are constant low or high (333333 ns is 1 cycle of 3000Hz)
-        await with_timeout(RisingEdge(dut.uo_out), timeout_time=333333*3*1000)#x1000 because timout takes ps not ns
+    try:                        # see if theres a rising edge over the timeframe of 3 clock cycles, if not then clearly we are constant low or high (100 ns is 1 cycle of 1MHz)
+        await with_timeout(RisingEdge(dut.uo_out), timeout_time=100*10*1000)#x1000 because timout takes ps not ns
         Edge_case = 0
         dut._log.info("edge_case 0")
     except cocotb.result.SimTimeoutError:
@@ -240,7 +252,10 @@ async def test_pwm_duty(dut):
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
-    
+
+    prime_registers(dut)
+
+
     test_cases = [                                              # establish the test cases we will use for this test
         (0x00,   "0%"),  
         (0x80,  "50%"),
