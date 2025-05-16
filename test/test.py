@@ -3,7 +3,7 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import RisingEdge, Timer, with_timeout, FallingEdge
 from cocotb.triggers import ClockCycles
 from cocotb.types import Logic
 from cocotb.types import LogicArray
@@ -149,13 +149,108 @@ async def test_spi(dut):
 
     dut._log.info("SPI test completed successfully")
 
+
+def check_range(freq, target_freq, percent_tolerance = 1):#helper function frequency test Kaleb Lacroix
+    tolerance = target_freq * (percent_tolerance/100)
+
+    abs_diff = abs(target_freq - freq)
+
+    return (abs_diff <= tolerance)
+
 @cocotb.test()
 async def test_pwm_freq(dut):
-    # Write your test here
+    #kaleb lacroix code begins:
+
+    #first check edge cases (duty cycle = 0% || 100%):
+    try:#see if theres a rising edge over the timeframe of 3 clock cycles, if not then clearly we are constant low or high (333333 ns is 1 cycle of 3000Hz)
+        await with_timeout(RisingEdge(dut.uo_out[0]), timeout_time=333333*3, units="ns")
+        Edge_case = 0
+    except cocotb.result.SimTimeoutError:
+        Edge_case = 1
+
+
+    if not edge_case:#find the frequency and test
+        await RisingEdge(dut.uo_out[0])
+        first_rise = get_sim_time(units='ns')
+        await RisingEdge(dut.uo_out[0])
+        second_rise = get_sim_time(units = "ns")
+
+        period = second_rise - first_rise
+        freq = 1/(period)
+
+        assert (check_range(freq, 3000)), "Frequency not within tolerance range of 3000Hz +- 1%"
+    
+    # Kaleb Lacroix code ends.
     dut._log.info("PWM Frequency test completed successfully")
 
 
+async def dutyCycle(dut):#helper function PWM duty test Kaleb Lacroix
+
+    try:#see if theres a rising edge over the timeframe of 3 clock cycles, if not then clearly we are constant low or high (333333 ns is 1 cycle of 3000Hz)
+        await with_timeout(RisingEdge(dut.uo_out[0]), timeout_time=333333*3, units="ns")
+        Edge_case = 0
+    except cocotb.result.SimTimeoutError:
+        Edge_case = 1
+        
+    if not Edge_case:
+        await RisingEdge(dut.uo_out[0])
+        T_rise = get_sim_time(units = "ns")
+        await FallingEdge(dut.uo_out[0])
+        T_fall = get_sim_time(units = "ns")
+        await RisingEdge(dut.uo_out[0])
+        T_rise_2 = get_sim_time(units = "ns")
+
+        T_period = T_rise_2 - T_rise
+        T_pulse = T_fall - T_rise
+        DC = (T_pulse/T_period)*256
+        return int(DC)
+
+    elif Edge_case:
+        if (dut.uo_out[0].value == 1):
+            return (0xFF)#for 100% duty cycle
+        else:
+            return (0x00)#for 0% duty cycle
+#def convert_to_8bit(duty_cycle):
+#    return (256*(duty_cycle/100))
 @cocotb.test()
 async def test_pwm_duty(dut):
-    # Write your test here
+    #kaleb lacroix code begins:
+
+    #enable all outputs to prime for testing:
+    ui_in_val = await send_spi_transaction(dut, 1, 0x00, 0xFF)  # Write transaction
+    await ClockCycles(dut.clk, 1000) 
+    ui_in_val = await send_spi_transaction(dut, 1, 0x01, 0xFF)  # Write transaction
+    await ClockCycles(dut.clk, 1000) 
+    ui_in_val = await send_spi_transaction(dut, 1, 0x02, 0xFF)  # Write transaction
+    await ClockCycles(dut.clk, 1000) 
+    ui_in_val = await send_spi_transaction(dut, 1, 0x03, 0xFF)  # Write transaction
+    await ClockCycles(dut.clk, 1000) 
+    # we have now guarunteed that all outputs are enabled and can start testing PWM
+
+    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0x00)  # Write transaction
+    await ClockCycles(dut.clk, 100)#give time for SPI to fully update
+    dut_cyc = await dutyCycle(dut.uo_out[0])
+    assert (abs(dut_cyc - 0x00) <= 1 ) , f"expected edge case duty Cycle = 0% (0x00), got {dut_cyc}"
+    await ClockCycles(dut.clk, 100)
+
+    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0xFF)  # Write transaction
+    await ClockCycles(dut.clk, 100)#give time for SPI to fully update
+    dut_cyc = await dutyCycle(dut.uo_out[0])
+    assert (abs(dut_cyc - 0xFF) <= 1 ) , f"expected edge case duty Cycle = 100% (0xFF), got {dut_cyc}"
+    await ClockCycles(dut.clk, 100)
+
+    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0x80)  # Write transaction
+    await ClockCycles(dut.clk, 100)#give time for SPI to fully update
+    dut_cyc = await dutyCycle(dut.uo_out[0])
+    assert (abs(dut_cyc - 0x80) <= 1 ) , f"expected duty Cycle = 50% (0x80), got {dut_cyc}"
+    await ClockCycles(dut.clk, 100)
+
+    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0xC0)  # Write transaction
+    await ClockCycles(dut.clk, 100)#give time for SPI to fully update
+    dut_cyc = await dutyCycle(dut.uo_out[0])
+    assert (abs(dut_cyc - 0xC0) <= 1 ), f"expected edge case duty Cycle = 75% (0xC0), got {dut_cyc}"
+    await ClockCycles(dut.clk, 100)
+
+    
+    # Kaleb Lacroix code ends.
     dut._log.info("PWM Duty Cycle test completed successfully")
