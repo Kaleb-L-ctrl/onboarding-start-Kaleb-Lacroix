@@ -190,10 +190,13 @@ async def dutyCycle(dut):       # helper function PWM duty test Kaleb Lacroix
     try:                        # see if theres a rising edge over the timeframe of 3 clock cycles, if not then clearly we are constant low or high (333333 ns is 1 cycle of 3000Hz)
         await with_timeout(RisingEdge(dut.uo_out), timeout_time=333333*3*1000)#x1000 because timout takes ps not ns
         Edge_case = 0
+        dut._log.info("edge_case 0")
     except cocotb.result.SimTimeoutError:
         Edge_case = 1
+        dut._log.info("edge_case 1")
     
     if not Edge_case:
+        dut._log.info("not edge case")
         await RisingEdge(dut.uo_out)
         T_rise = get_sim_time(units = "ns")
         await FallingEdge(dut.uo_out)
@@ -204,12 +207,16 @@ async def dutyCycle(dut):       # helper function PWM duty test Kaleb Lacroix
         T_period = T_rise_2 - T_rise
         T_pulse = T_fall - T_rise
         DC = (T_pulse/T_period)*256
+        dut._log.info("returned returned non edge case calculation" )
         return int(DC)
 
     elif Edge_case:
+        dut._log.info("edge_case if statement entered")
         if (dut.uo_out.value == 1):
+            dut._log.info("returned 100 duty cycle from edge case" )
             return (0xFF)           # for 100% duty cycle
         else:
+            dut._log.info("returned 0 duty cycle from edge case" )
             return (0x00)           # for 0% duty cycle
 
 @cocotb.test()
@@ -239,17 +246,17 @@ async def test_pwm_duty(dut):
         (0x80,  "50%"),
         (0xFF, "100%")
     ]
-    dut._log.info("declared test cases")
+    #dut._log.info("declared test cases")
     for Pulse_Width, percent in test_cases:
         ui_in_val = await send_spi_transaction(dut, 1, 0x04, Pulse_Width)   # Write transaction
-        dut._log.info("first await SPI transaction")
+        #dut._log.info("first await SPI transaction")
         await ClockCycles(dut.clk, 100)                                     # give time for SPI to fully update
-        dut._log.info("clock cycles await")
+        #dut._log.info("clock cycles await")
         dut_cyc = await dutyCycle(dut)                            # check the output, making it 
-        dut._log.info("duty_cycle function run")
+        #dut._log.info("duty_cycle function run")
         assert (abs(dut_cyc - Pulse_Width) <= 1 ) , f"expected duty Cycle = {percent} (0x{Pulse_Width:02X}), got 0x{dut_cyc:02X}" 
         await ClockCycles(dut.clk, 100)                                     # give time for SPI to fully update
-        dut._log.info("done code block")
+        #dut._log.info("done code block")
     
     # Kaleb Lacroix code ends.
     dut._log.info("PWM Duty Cycle test completed successfully")
