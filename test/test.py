@@ -235,14 +235,17 @@ async def test_pwm_duty(dut):
         (0x80,  "50%"),
         (0xFF, "100%")
     ]
-
+    dut._log.info("declared test cases")
     for Pulse_Width, percent in test_cases:
         ui_in_val = await send_spi_transaction(dut, 1, 0x04, Pulse_Width)   # Write transaction
+        dut._log.info("first await SPI transaction")
         await ClockCycles(dut.clk, 100)                                     # give time for SPI to fully update
+        dut._log.info("clock cycles await")
         dut_cyc = await dutyCycle(dut)                            # check the output, making it 
+        dut._log.info("duty_cycle function run")
         assert (abs(dut_cyc - Pulse_Width) <= 1 ) , f"expected duty Cycle = {percent} (0x{Pulse_Width:02X}), got 0x{dut_cyc:02X}" 
         await ClockCycles(dut.clk, 100)                                     # give time for SPI to fully update
-
+        dut._log.info("done code block")
     
     # Kaleb Lacroix code ends.
     dut._log.info("PWM Duty Cycle test completed successfully")
