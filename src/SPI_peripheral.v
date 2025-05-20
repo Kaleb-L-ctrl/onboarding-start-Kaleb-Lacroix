@@ -48,7 +48,7 @@ module SPI_peripheral (
 
 
         end else begin//                                not reset; we capture values from contrtoler
-            SCLK_sync <= {SCLK_sync[0], SCLK};//        zomg synchronizer
+            SCLK_sync <= {SCLK_sync[0], SCLK};//        zomg synchronizer for inputs to avoid metastability in logic operations
             copi_sync <= {copi_sync[0], COPI};
             ncs_sync  <= {ncs_sync[0], nCS};
 
@@ -59,14 +59,14 @@ module SPI_peripheral (
             end
             
             else if(SCLKRISE && NCSLOW) begin//         data valid take a sample and run code, (SCKRISE will always be 0 on rst)
-                if (counter != 5'b10000)begin
-                    copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
+                if (counter != 16)begin
+                    copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bitl, shuffle over others
                     counter <= counter + 1;
                 end
             end
         
             if (counter==16) begin///we ignore read
-                if (copi_message[15]== 1'b1)begin
+                if (copi_message[15])begin
                     case (copi_message[14:8])
                         7'h00:en_reg_out_7_0  <= copi_message[7:0];
                         7'h01:en_reg_out_15_8 <= copi_message[7:0];
