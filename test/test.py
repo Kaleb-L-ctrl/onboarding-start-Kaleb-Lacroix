@@ -197,7 +197,7 @@ async def find_duty(dut):
 
     edge_case_time_ns = (1/3000)*10*1000000000#after 10 clock cycles of the expected frequency we call it an edge case
     while(not done):#log time until we find a rising edge, when we do, thats the final time
-        while (int(dut.uo_out.value) == 0)
+        while (int(dut.uo_out.value) == 0):
             done = true#beak out of this loop we have founda rising edge
             if ((cocotb.utils.get_sim_time(units="ns") - start) > edge_case_time_ns):
                 return 0x00 #signal is stuck low
