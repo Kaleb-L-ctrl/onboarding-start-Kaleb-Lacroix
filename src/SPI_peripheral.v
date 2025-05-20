@@ -58,22 +58,22 @@ module SPI_peripheral (
                 copi_message <= 16'b0;
             end
             
-            else if(SCLKRISE && NCSLOW) begin//         data valid take a sample and run code, (SCKRISE will always be 0 on rst)
-                if (counter != 16)begin
+            else if(SCLKRISE && NCSLOW) begin//         incoming data is valid take samples
+                if (counter != 16)begin//               stop sampling after getting the 16 bits
                     copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bitl, shuffle over others
                     counter <= counter + 1;
                 end
             end
         
-            if (counter==16) begin///we ignore read
-                if (copi_message[15])begin
+            if (counter==16) begin
+                if (copi_message[15])begin//            we ignore read
                     case (copi_message[14:8])
                         7'h00:en_reg_out_7_0  <= copi_message[7:0];
                         7'h01:en_reg_out_15_8 <= copi_message[7:0];
                         7'h02:en_reg_pwm_7_0  <= copi_message[7:0];
                         7'h03:en_reg_pwm_15_8 <= copi_message[7:0];
                         7'h04:pwm_duty_cycle  <= copi_message[7:0];
-                        default: ;//                    do nothing we are ignoring invalid adresses
+                        default: ;//                    do nothing; we are ignoring invalid adresses
                     endcase
                 end
             end
