@@ -163,16 +163,16 @@ async def test_pwm_freq(dut):
 
                                                                 # first check edge cases (duty cycle = 0% || 100%):
     try:                    # see if theres a rising edge over the timeframe of 3 clock cycles, if not then clearly we are constant low or high (333333 ns is 1 cycle of 3000Hz)
-        await with_timeout(RisingEdge(dut.uo_out), timeout_time=333333*3*1000)#x1000 because timout takes ps not ns
+        await with_timeout(RisingEdge(dut.uo_out[0].value), timeout_time=333333*3*1000)#x1000 because timout takes ps not ns
         Edge_case = 0
     except cocotb.result.SimTimeoutError:
         Edge_case = 1
 
 
     if not Edge_case:                                           # find the frequency and test
-        await RisingEdge(dut.uo_out)
+        await RisingEdge(dut.uo_out[0].value)
         first_rise = get_sim_time(units='ns')
-        await RisingEdge(dut.uo_out)
+        await RisingEdge(dut.uo_out[0].value)
         second_rise = get_sim_time(units = "ns")
 
         period = second_rise - first_rise
