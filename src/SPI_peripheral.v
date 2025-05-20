@@ -31,8 +31,8 @@ module SPI_peripheral (
     wire NCSLOW         = (ncs_sync == 2'b00);
     wire NCS_falling    = (ncs_sync == 2'b10);
 
-    always @(posedge clk or negedge rst_n) begin//on internal clock we sample through our buffers
-        if (!rst_n)begin //reset (active low)
+    always @(posedge clk or negedge rst_n) begin//      on internal clock we sample through our buffers
+        if (!rst_n)begin //                             reset (active low)
             SCLK_sync       <= 2'b00;
             copi_sync       <= 2'b00;
             ncs_sync        <= 2'b00;
@@ -47,18 +47,18 @@ module SPI_peripheral (
             copi_message    <= 16'b0;
 
 
-        end else begin//not reset; we capture values from contrtoler
-            SCLK_sync <= {SCLK_sync[0], SCLK};//zomg synchronizer
+        end else begin//                                not reset; we capture values from contrtoler
+            SCLK_sync <= {SCLK_sync[0], SCLK};//        zomg synchronizer
             copi_sync <= {copi_sync[0], COPI};
             ncs_sync  <= {ncs_sync[0], nCS};
 
         
-            if (NCS_falling)begin//falling edge we are about to recieve a message get ready
+            if (NCS_falling)begin//                     falling edge we are about to recieve a message get ready
                 counter <= 5'b0;
                 copi_message <= 16'b0;
             end
             
-            else if(SCLKRISE && NCSLOW) begin//data valid take a sample and run code, (SCKRISE will always be 0 on rst)
+            else if(SCLKRISE && NCSLOW) begin//         data valid take a sample and run code, (SCKRISE will always be 0 on rst)
                 if (counter != 5'b10000)begin
                     copi_message <= {copi_message[14:0], copi_sync[1]};//load in the new bit.
                     counter <= counter + 1;
@@ -73,7 +73,7 @@ module SPI_peripheral (
                         7'h02:en_reg_pwm_7_0  <= copi_message[7:0];
                         7'h03:en_reg_pwm_15_8 <= copi_message[7:0];
                         7'h04:pwm_duty_cycle  <= copi_message[7:0];
-                        default: ;//do nothing we are ignoring invalid adresses
+                        default: ;//                    do nothing we are ignoring invalid adresses
                     endcase
                 end
             end
