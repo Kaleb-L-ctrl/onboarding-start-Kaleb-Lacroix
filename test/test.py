@@ -157,6 +157,114 @@ def check_range(freq, target_freq, percent_tolerance = 1):      # helper functio
 
     return (abs_diff <= tolerance)
 
+
+async def test_pwm_freq(dut):
+    done, low_edge, high_edge = False
+    DoNothing = 1
+    
+    start = cocotb.utils.get_sim_time(units="ns")
+
+    edge_case_time_ns = (1/3000)*10*1000000000#after 10 clock cycles of the expected frequency we call it an edge case
+    while(not done):#log time until we find a rising edge, when we do, thats the final time
+        while (int(dut.uo_out.value) == 0)
+            done = true#beak out of this loop we have founda rising edge
+            if ((cocotb.utils.get_sim_time(units="ns") - start) > edge_case_time_ns):
+                low_edge = True
+                break
+        Rise1 = cocotb.utils.get_sim_time(units="ns")
+        if (not low_edge) and ((Rise1-start) > edge_case_time_ns):high_edge = True #signal is stuck high
+        if low_edge or high_edge: break
+    
+    if (not (low_edge or high_edge)):
+        while ((int(dut.uo_out.value) == 1)):
+            DoNothing += 1
+        while(int(dut.uo_out.value) == 0):
+            Rise2 = cocotb.utils.get_sim_time(units="ns")
+        
+        period = Rise2-Rise1
+        freq = 1/period
+        assert check_range(freq,3000), "frequency not within specified tolerance range"
+
+    dut._log.info("PWM Frequency test completed successfully")
+
+
+
+async def find_duty(dut):
+    done, low_edge, high_edge = False
+    DoNothing = 1
+    
+    start = cocotb.utils.get_sim_time(units="ns")
+
+    edge_case_time_ns = (1/3000)*10*1000000000#after 10 clock cycles of the expected frequency we call it an edge case
+    while(not done):#log time until we find a rising edge, when we do, thats the final time
+        while (int(dut.uo_out.value) == 0)
+            done = true#beak out of this loop we have founda rising edge
+            if ((cocotb.utils.get_sim_time(units="ns") - start) > edge_case_time_ns):
+                return 0x00 #signal is stuck low
+        Rise1 = cocotb.utils.get_sim_time(units="ns")
+        if  ((Rise1-start) > edge_case_time_ns):return 0xFF #signal is stuck high
+
+    
+    if (not (low_edge or high_edge)):
+        while ((int(dut.uo_out.value) == 1)):
+            Fall = cocotb.utils.get_sim_time(units="ns")
+        while(int(dut.uo_out.value) == 0):
+            Rise2 = cocotb.utils.get_sim_time(units="ns")
+        
+        period = Rise2-Rise1
+        duty = Fall-Rise1
+        duty = int((duty/period)*256)
+        return duty
+    
+async def test_pwm_duty(dut):
+    #kaleb lacroix code begins:
+    # Reset
+    dut._log.info("Start PWM duty test")
+
+    # Set the clock period to 100 ns (10 MHz)
+    clock = Clock(dut.clk, 100, units="ns")
+    cocotb.start_soon(clock.start())
+
+    # Reset
+    dut._log.info("Reset")
+    dut.ena.value = 1
+    ncs = 1
+    bit = 0
+    sclk = 0
+    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 5)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 5)
+
+    prime_registers(dut)
+
+
+    test_cases = [                                              # establish the test cases we will use for this test
+        (0x00,   "0%"),  
+        (0x80,  "50%"),
+        (0xFF, "100%")
+    ]
+    #dut._log.info("declared test cases")
+    for Pulse_Width, percent in test_cases:
+        ui_in_val = await send_spi_transaction(dut, 1, 0x04, Pulse_Width)   # Write transaction
+        #dut._log.info("first await SPI transaction")
+        await ClockCycles(dut.clk, 100)                                     # give time for SPI to fully update
+        #dut._log.info("clock cycles await")
+        dut_cyc = await find_duty(dut)                            # check the output, making it 
+        #dut._log.info("duty_cycle function run")
+        assert (abs(dut_cyc - Pulse_Width) <= 1 ) , f"expected duty Cycle = {percent} (0x{Pulse_Width:02X}), got 0x{dut_cyc:02X}" 
+        await ClockCycles(dut.clk, 100)                                     # give time for SPI to fully update
+        #dut._log.info("done code block")
+    
+    # Kaleb Lacroix code ends.
+    dut._log.info("PWM Duty Cycle test completed successfully")
+
+
+   
+
+#below are old implementations, not sure why they didnt work and frankly i dont want to invest the time to find out so trying simpler methods
+"""
 @cocotb.test()
 async def test_pwm_freq(dut):
     #kaleb lacroix code begins:
@@ -275,3 +383,4 @@ async def test_pwm_duty(dut):
     
     # Kaleb Lacroix code ends.
     dut._log.info("PWM Duty Cycle test completed successfully")
+"""
