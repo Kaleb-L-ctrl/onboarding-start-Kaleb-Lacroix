@@ -43,7 +43,7 @@ module SPI_peripheral (
             en_reg_pwm_15_8 <= 8'b0;
             pwm_duty_cycle  <= 8'b0;
 
-            counter         <= 0;
+            counter         <= 5'b0;
             copi_message    <= 16'b0;
 
 
@@ -53,7 +53,7 @@ module SPI_peripheral (
             ncs_sync  <= {ncs_sync[0], nCS};
 
         
-            if (NCS_falling)begin//                     falling edge we are about to recieve a message get ready
+            if (NCS_falling)begin//                     falling edge we are about to recieve a message get ready (reset old message-related registers)
                 counter <= 5'b0;
                 copi_message <= 16'b0;
             end
